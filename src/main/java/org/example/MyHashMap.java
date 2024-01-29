@@ -1,6 +1,8 @@
 package org.example;
 
-public class MyHashMap<K, V> {
+import java.util.Objects;
+
+public class MyHashMap<K, V> implements MyMap<K, V>{
     static final int DEFAULT_CAPACITY = 1 << 4;
     static final int MAXIMUM_CAPACITY = 1 << 30;
     static final float DEFAULT_LOAD_FACTOR = 0.75f;
@@ -55,16 +57,16 @@ public class MyHashMap<K, V> {
                     && this.hashCode == ((Node<?, ?>) obj).hashCode
                     && this.key == ((Node<?, ?>) obj).key;
         }
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(key) ^ Objects.hashCode(value);
+        }
     }
-
+    @Override
     public void put(K key, V value){
         int hash = hash(key);
         int index = hash & capacity - 1;
         Node<K, V> newNode = new Node<>(hash, key, value);
-
-        if(elementsQuantity >= capacity){
-            resize();
-        }
 
         if(table[index] == null){
             table[index] = newNode;
@@ -83,26 +85,75 @@ public class MyHashMap<K, V> {
                 }
             }
         }
+        if(elementsQuantity >= this.threshold){
+            resize();
+        }
     }
+    @Override
+    public V get(K key){
+        int hash = hash(key);
+        int index = hash & capacity - 1;
+        Node<K, V> node = table[index];
 
+        if(node != null){
+            Node<K, V> currentNode = node;
+            while (currentNode != null){
+                if(currentNode.key == key){
+                    System.out.println(currentNode);
+                    return currentNode.value;
+                }
+                currentNode = currentNode.next;
+            }
+        }
+
+        System.out.println("Value not found");
+        return null;
+    }
+    @Override
+    public void remove(K key) {
+        int hash = hash(key);
+        int index = hash & capacity - 1;
+        Node<K, V> node = table[index];
+
+        if (node != null) {
+            Node<K, V> currentNode = node;
+            Node<K, V> previousNode = null;
+            while (currentNode != null) {
+
+                if (key == currentNode.key) {
+                    if (currentNode == node) {
+                        table[index] = currentNode.next;
+                    } else {
+                        previousNode.next = currentNode.next;
+                    }
+                    elementsQuantity--;
+                    break;
+                }
+
+                previousNode = currentNode;
+                currentNode = currentNode.next;
+            }
+        }
+
+    }
     final void resize(){
         Node<K, V>[] oldTable = this.table;
         capacity = capacity();
-        Node<K, V>[] newTable = (Node<K, V>[]) new Node[capacity];
-        table = newTable;
+        table = (Node<K, V>[]) new Node[capacity];
 
         if(oldTable != null){
+            threshold = (int) (capacity * DEFAULT_LOAD_FACTOR);
+            elementsQuantity = 0;
             for(Node<K, V> node: oldTable){
                 if(node != null){
                     Node<K, V> currentNode = node;
 
                     while(currentNode != null){
-                        put(node.key, node.value);
+                        put(currentNode.key, currentNode.value);
                         currentNode = currentNode.next;
                     }
                 }
             }
-            threshold = (int) (capacity * DEFAULT_LOAD_FACTOR);
         }
     }
     final int capacity(){
