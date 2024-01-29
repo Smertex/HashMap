@@ -68,7 +68,7 @@ public class MyHashMap<K, V> implements MyMap<K, V>{
         if(size >= MAXIMUM_CAPACITY) return;
 
         int hash = hash(key);
-        int index = hash & capacity - 1;
+        int index = searchIndex(hash);
         Node<K, V> newNode = new Node<>(hash, key, value);
 
         if(table[index] == null){
@@ -95,7 +95,7 @@ public class MyHashMap<K, V> implements MyMap<K, V>{
     @Override
     public V get(K key){
         int hash = hash(key);
-        int index = hash & capacity - 1;
+        int index = searchIndex(hash);
         Node<K, V> node = table[index];
 
         if(node != null){
@@ -114,7 +114,7 @@ public class MyHashMap<K, V> implements MyMap<K, V>{
     @Override
     public void remove(K key) {
         int hash = hash(key);
-        int index = hash & capacity - 1;
+        int index = searchIndex(hash);
         Node<K, V> node = table[index];
 
         if (node != null) {
@@ -134,11 +134,6 @@ public class MyHashMap<K, V> implements MyMap<K, V>{
                 currentNode = currentNode.next;
             }
         }
-    }
-
-    @Override
-    public int getSize() {
-        return size;
     }
 
     @Override
@@ -172,13 +167,31 @@ public class MyHashMap<K, V> implements MyMap<K, V>{
     final int capacity(){
         return (this.table == null) ? capacity = DEFAULT_CAPACITY : capacity << 1;
     }
+    final int searchIndex(int hashCode){
+        return hashCode & capacity - 1;
+    }
+
+    public Node<K, V>[] getTable() {
+        return table;
+    }
+
+    @Override
+    public int getSize() {
+        return size;
+    }
+
+    public int getCapacity() {
+        return capacity;
+    }
+
+    public int getThreshold() {
+        return threshold;
+    }
+
     public MyHashMap(){
         resize();
         threshold = (int) (capacity * DEFAULT_LOAD_FACTOR);
         size = 0;
-    }
-    public Node<K, V>[] getTable() {
-        return table;
     }
 
     /*-------------------------- STATIC METHODS --------------------------*/
