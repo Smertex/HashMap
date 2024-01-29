@@ -8,8 +8,8 @@ public class MyHashMap<K, V> implements MyMap<K, V>{
     static final float DEFAULT_LOAD_FACTOR = 0.75f;
     private int threshold; // capacity * load factor
     private int capacity;
-    private int elementsQuantity;
-    Node<K, V>[] table;
+    private int size;
+    private Node<K, V>[] table;
     static final class Node<K, V>{
         final int hashCode;
         final K key;
@@ -57,6 +57,7 @@ public class MyHashMap<K, V> implements MyMap<K, V>{
                     && this.hashCode == ((Node<?, ?>) obj).hashCode
                     && this.key == ((Node<?, ?>) obj).key;
         }
+
         @Override
         public int hashCode() {
             return Objects.hashCode(key) ^ Objects.hashCode(value);
@@ -64,13 +65,15 @@ public class MyHashMap<K, V> implements MyMap<K, V>{
     }
     @Override
     public void put(K key, V value){
+        if(size >= MAXIMUM_CAPACITY) return;
+
         int hash = hash(key);
         int index = hash & capacity - 1;
         Node<K, V> newNode = new Node<>(hash, key, value);
 
         if(table[index] == null){
             table[index] = newNode;
-            elementsQuantity++;
+            size++;
         } else {
             Node<K, V> currentNode = table[index];
             while(currentNode != null){
@@ -81,11 +84,11 @@ public class MyHashMap<K, V> implements MyMap<K, V>{
                     currentNode = currentNode.next;
                 } else {
                     currentNode.next = new Node<>(hash, key, value);
-                    elementsQuantity++;
+                    size++;
                 }
             }
         }
-        if(elementsQuantity >= this.threshold){
+        if(size >= this.threshold){
             resize();
         }
     }
@@ -105,7 +108,6 @@ public class MyHashMap<K, V> implements MyMap<K, V>{
                 currentNode = currentNode.next;
             }
         }
-
         System.out.println("Value not found");
         return null;
     }
@@ -119,23 +121,34 @@ public class MyHashMap<K, V> implements MyMap<K, V>{
             Node<K, V> currentNode = node;
             Node<K, V> previousNode = null;
             while (currentNode != null) {
-
                 if (key == currentNode.key) {
                     if (currentNode == node) {
                         table[index] = currentNode.next;
                     } else {
                         previousNode.next = currentNode.next;
                     }
-                    elementsQuantity--;
+                    size--;
                     break;
                 }
-
                 previousNode = currentNode;
                 currentNode = currentNode.next;
             }
         }
-
     }
+
+    @Override
+    public int getSize() {
+        return size;
+    }
+
+    @Override
+    public void removeAll() {
+        table = null;
+        size = 0;
+        resize();
+        threshold = (int) (capacity * DEFAULT_LOAD_FACTOR);
+    }
+
     final void resize(){
         Node<K, V>[] oldTable = this.table;
         capacity = capacity();
@@ -143,7 +156,7 @@ public class MyHashMap<K, V> implements MyMap<K, V>{
 
         if(oldTable != null){
             threshold = (int) (capacity * DEFAULT_LOAD_FACTOR);
-            elementsQuantity = 0;
+            size = 0;
             for(Node<K, V> node: oldTable){
                 if(node != null){
                     Node<K, V> currentNode = node;
@@ -162,7 +175,10 @@ public class MyHashMap<K, V> implements MyMap<K, V>{
     public MyHashMap(){
         resize();
         threshold = (int) (capacity * DEFAULT_LOAD_FACTOR);
-        elementsQuantity = 0;
+        size = 0;
+    }
+    public Node<K, V>[] getTable() {
+        return table;
     }
 
     /*-------------------------- STATIC METHODS --------------------------*/
